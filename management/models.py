@@ -25,7 +25,7 @@ class Task(models.Model):
     status = models.CharField(choices=status_choices, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    due_date = models.DateField()
+    due_date = models.DateField()  # consider as deadline
 
     def __str__(self):
         return f"{self.project.name} | {self.title}"
