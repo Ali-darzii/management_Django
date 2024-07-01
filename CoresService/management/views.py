@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.serializers import ValidationError
 
-from management.models import Project, Task, Comment
-from management.serializers import ProjectSerializer, TaskSerializer, CommentSerializer
+from .models import Project, Task, Comment
+from .serializers import ProjectSerializer, TaskSerializer, CommentSerializer
 from rest_framework.viewsets import mixins, GenericViewSet
 
 

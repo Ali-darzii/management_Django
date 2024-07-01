@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Internal
     'management',
 ]
 
@@ -55,7 +54,7 @@ ROOT_URLCONF = 'CoreManagement.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
+        'DIRS': [BASE_DIR / 'Core/templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -128,3 +127,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+# Celery settings
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER', 'redis://redis:6379/1')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_BACKEND', 'redis://redis:6379/1')

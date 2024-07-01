@@ -1,4 +1,3 @@
-
 services:
   postgres:
     image: postgres:latest
@@ -18,11 +17,11 @@ services:
   django:
     container_name: management-django
     build:
-      context: ./
+      context: ./CoresService
       dockerfile: Dockerfile
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - .:/app
+      - ./CoresService:/app/
     ports:
       - "8000:8000"
     environment:
@@ -41,11 +40,11 @@ services:
   celery:
     container_name: management-celery
     build:
-      context: ./
+      context: ./CoresService
       dockerfile: Dockerfile
     command: celery --app=CoreManagement worker -l INFO
     volumes:
-      - .:/app
+      - ./CoresService:/app/
     environment:
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - DEBUG=True
