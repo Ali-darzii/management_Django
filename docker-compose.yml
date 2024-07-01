@@ -43,6 +43,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    command: celery --app=CoreManagement worker -l INFO
     volumes:
       - .:/app
     environment:
