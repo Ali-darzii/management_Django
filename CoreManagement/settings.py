@@ -11,8 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv
-load_dotenv()
+from django.core.cache.backends.redis import RedisCache
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,10 +19,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n+-f*)bup8z_cnebwv5w6te5za@#w2h2p0s2d0g1-%9%s&4a2s'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-n+-f*)bup8z_cnebwv5w6te5za@#w2h2p0s2d0g1-%9%s&4a2s')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', True)
 
 ALLOWED_HOSTS = []
 
@@ -77,13 +76,24 @@ WSGI_APPLICATION = 'CoreManagement.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("postgresDBName"),
-        'USER': os.getenv("postgresDBUser"),
-        'PASSWORD': os.getenv("postgresDBPassword"),
-        'HOST': os.getenv("postgresDBHost"),
-        'PORT': os.getenv("postgresDBPort"),
+        'NAME': os.getenv('DATABASE_NAME'),
+        'USER': os.getenv('DATABASE_USER'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+        'HOST': os.getenv('DATABASE_HOST'),
+        'PORT': '5432',
     }
 }
+
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': f"redis://{os.getenv('REDIS_HOST')}:6379/1",
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
