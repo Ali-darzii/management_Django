@@ -36,13 +36,22 @@ services:
     depends_on:
       - postgres
       - redis
-      - celery
+      - rabbitmq
+
+  rabbitmq:
+    image:  rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:6572"
+      - "15672:15672"
+
+
   celery:
     container_name: management-celery
     build:
       context: ./CoresService
       dockerfile: Dockerfile
-    command: celery --app=CoreManagement worker -l INFO
+    command: celery --app=CoreManagement worker -l INFO -Q tasks,
     volumes:
       - ./CoresService:/app/
     environment:
@@ -50,9 +59,24 @@ services:
       - DEBUG=True
       - SECRET_KEY=HereIsYourSecret_Keyqweroqpowek12312313
     depends_on:
-      - postgres
-      - redis
+      - django
+      - rabbitmq
 
+#  stand_lone_celery:
+#    container_name: stand_lone_celery
+#    build:
+#      context: ./celery_worker
+#      dockerfile: Dockerfile
+#    command: celery -A celery_base worker -l INFO -Q queue2
+#    volumes:
+#      - ./celery_worker:/app/
+#    environment:
+#      - BROKER_URL=redis://redis:6379/1
+#      - RESULT_BACKEND=redis://redis:6379/1
+#    depends_on:
+#      - postgres
+#      - redis
+#      - django
 
 volumes:
   postgres_data:
