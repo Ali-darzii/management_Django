@@ -49,3 +49,6 @@ class Comment(models.Model):
         verbose_name = "Comment"
         verbose_name_plural = 'Comments'
         db_table = 'commentTable'
+
+
+

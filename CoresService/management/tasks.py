@@ -3,18 +3,21 @@ from django.conf import settings
 from celery import shared_task
 from django.utils import timezone
 from datetime import timedelta
-from .models import Task
+from .models import Task, Project, Comment
 from django.db.models import Q
 from celery.signals import worker_ready
 from django.core.cache import cache as redis
 
+recipient_email = 'ali.darzi.1354@gmail.com'
 
-# run send_due_task_reminders after workers are up
+
+# run functions after celery workers are up
 @worker_ready.connect
 def at_worker_ready(**kwargs):
-    if not redis.get('send_due_task'):
+    if not redis.get('run_for_once'):
         send_due_task_reminders.apply_async()
-    redis.set('send_due_task', True)
+        daily_project_summery.apply_async()
+    redis.set('run_for_once', True)
 
 
 # run send_due_task_reminders every 24 hour
@@ -32,8 +35,32 @@ def send_due_task_reminders():
                 'Task Due Reminder',
                 f'The task "{task.title}" is due within the next 24 hours.',
                 settings.DEFAULT_FROM_EMAIL,
-                ['ali.darzi.1354@gmail.com'],
+                [recipient_email],
                 fail_silently=False,
             )
         except:
-            print("failed at sending email (redis)!!!")
+            redis.set(f"{recipient_email}_not_sent", 1)
+
+
+@shared_task(queue='tasks')
+def daily_project_summery():
+    """ Summery of Projects every 24 hour"""
+    today = timezone.now().date()
+    tomorrow = today + timedelta(days=1)
+    summery_body = ''
+    projects = Project.objects.all()
+    for project in projects:
+        summery_body = f'Project: {project.name}\n'
+        tasks = Task.objects.filter(project=projects, due_date__lte=tomorrow)
+        if tasks.exists():
+            summery_body += 'Tasks:\n'
+            for task in tasks:
+                summery_body += f'- {task.title}: {task.status}\n'
+                comments = Comment.objects.filter(task=task)
+                if comments.exists():
+                    summery_body += '  Comments:\n'
+                    for comment in comments:
+                        summery_body += f'    - {comment.author}: {comment.content}\n'
+    # or we can send email
+    print(summery_body)
+

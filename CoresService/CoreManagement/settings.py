@@ -87,7 +87,6 @@ DATABASES = {
     }
 }
 
-
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -149,6 +148,10 @@ CELERY_RESULT_BACKEND = os.environ.get('CELERY_BACKEND', f"redis://{os.environ.g
 CELERY_BEAT_SCHEDULE = {
     "send_due_task_reminders": {
         "task": "management.tasks.send_due_task_reminders",
+        "schedule": timedelta(hours=24),
+    },
+    "daily_project_summery": {
+        "task": "management.tasks.daily_project_summery",
         "schedule": timedelta(hours=24),
     },
 }
