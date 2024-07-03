@@ -1,4 +1,10 @@
 services:
+  redis:
+    image: redis:7.0.11-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - live
   postgres:
     image: postgres:latest
     container_name: management-postgres
@@ -10,9 +16,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7.0.11-alpine
+    networks:
+      - live
 
   django:
     container_name: management-django
@@ -37,13 +42,17 @@ services:
       - postgres
       - redis
       - rabbitmq
+    networks:
+      - live
 
   rabbitmq:
-    image:  rabbitmq:management
+    image: rabbitmq:management
     container_name: rabbitmq
     ports:
       - "5672:6572"
       - "15672:15672"
+    networks:
+      - live
 
 
   celery:
@@ -51,33 +60,48 @@ services:
     build:
       context: ./CoresService
       dockerfile: Dockerfile
-    command: celery --app=CoreManagement worker -l INFO -Q tasks,
+    command: celery --app=CoreManagement worker -l INFO -Q tasks -B --concurrency=1
     volumes:
       - ./CoresService:/app/
     environment:
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - DEBUG=True
       - SECRET_KEY=HereIsYourSecret_Keyqweroqpowek12312313
+      - DATABASE_NAME=coreManagement
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=admin
+      - DATABASE_HOST=postgres
+      - REDIS_HOST=redis
     depends_on:
       - django
+      - redis
       - rabbitmq
-
-#  stand_lone_celery:
-#    container_name: stand_lone_celery
-#    build:
-#      context: ./celery_worker
-#      dockerfile: Dockerfile
-#    command: celery -A celery_base worker -l INFO -Q queue2
-#    volumes:
-#      - ./celery_worker:/app/
-#    environment:
-#      - BROKER_URL=redis://redis:6379/1
-#      - RESULT_BACKEND=redis://redis:6379/1
-#    depends_on:
-#      - postgres
-#      - redis
-#      - django
+    networks:
+      - live
+  celery-beat:
+    build:
+      context: ./CoresService
+      dockerfile: Dockerfile
+    command: celery -A CoreManagement beat -l info
+    volumes:
+      - ./CoresService:/app/
+    environment:
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DEBUG=True
+      - SECRET_KEY=HereIsYourSecret_Keyqweroqpowek12312313
+      - DATABASE_NAME=coreManagement
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=admin
+      - DATABASE_HOST=postgres
+    depends_on:
+      - redis
+      - postgres
+      - django
+    networks:
+      - live
 
 volumes:
   postgres_data:
+networks:
+  live:
 

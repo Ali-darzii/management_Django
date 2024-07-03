@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+from celery.schedules import crontab
 from django.core.cache.backends.redis import RedisCache
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'management',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -81,6 +84,18 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': os.getenv('DATABASE_HOST'),
         'PORT': '5432',
+    }
+}
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"redis://{os.environ.get('REDIS_HOST', 'redis')}:6379/1",
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        "KEY_PREFIX": "cache"
     }
 }
 
@@ -129,4 +144,19 @@ REST_FRAMEWORK = {
 
 # Celery settings
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER', 'amqp://guest:guest@rabbitmq:5672/')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_BACKEND', 'redis://redis:6379/1')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_BACKEND', f"redis://{os.environ.get('REDIS_HOST', 'redis')}:6379/1")
+
+CELERY_BEAT_SCHEDULE = {
+    "send_due_task_reminders": {
+        "task": "management.tasks.send_due_task_reminders",
+        "schedule": timedelta(hours=24),
+    },
+}
+
+# Email Configs
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'ali.darrzi.1382@gmail.com'
+EMAIL_HOST_PASSWORD = 'pmmmvkfijdjbgrni'
+EMAIL_PORT = 587
