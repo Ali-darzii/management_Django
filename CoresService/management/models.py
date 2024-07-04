@@ -81,5 +81,5 @@ def task_post_delete(sender, instance, **kwargs):
 def task_commented(sender, instance, created, **kwargs):
     if created:
         channel_layer = get_channel_layer()
-        notification = {"type": "send_message", "message": f"{instance.author} commented on {instance.task.tile} task"}
+        notification = {"type": "send_message", "message": f"{instance.author} commented on {instance.task.title} task"}
         async_to_sync(channel_layer.group_send)("notifications", notification)
