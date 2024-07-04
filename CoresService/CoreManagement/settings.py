@@ -118,6 +118,7 @@ CACHES = {
     }
 }
 
+CACHE_TIMEOUT = 3600  # 1 hour
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
