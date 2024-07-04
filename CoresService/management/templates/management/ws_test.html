@@ -6,9 +6,12 @@
     <title>Chat Room</title>
 </head>
 <body>
-<textarea id="chat-log" cols="100" rows="20"></textarea><br>
-<input id="chat-message-input" type="text" size="100"><br>
-<input id="chat-message-submit" type="button" value="Send">
+
+<h1>WebSocket Test</h1>
+<h1>for detail open console</h1>
+<h1>don't forget allow notification</h1>
+<h1>Create|Update|Delete a task or Create a comment to see notification</h1>
+
 <script>
 
 
@@ -25,6 +28,27 @@
 
     socket.onmessage = function (event) {
         console.log('Message from server:', event.data);
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notification");
+        }
+        
+        // Let's check whether notification permissions have already been granted
+        else if (Notification.permission === "granted") {
+            // If it's okay let's create a notification
+            let data = JSON.parse(event.data);
+            var notification = new Notification(data["message"]);
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(function (permission) {
+                // If the user accepts, let's create a notification
+                if (permission === "granted") {
+                    var notification = new Notification("Hi there!");
+                }
+            });
+        } else {
+            console.log("notification error from browser");
+        }
+
+
     };
 
     socket.onclose = function (event) {
@@ -34,6 +58,8 @@
     socket.onerror = function (error) {
         console.error('WebSocket error:', error);
     };
+
+
 </script>
 </body>
 </html>
