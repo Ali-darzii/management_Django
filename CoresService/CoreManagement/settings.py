@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+from celery.schedules import crontab
 from django.core.cache.backends.redis import RedisCache
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,11 +27,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-n+-f*)bup8z_cnebwv5w6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
+    'management',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -37,7 +42,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Internal
-    'management',
+
+    # External + daphne + channels
+    'django_celery_beat',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +56,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'CoreManagement.urls'
@@ -55,7 +65,7 @@ ROOT_URLCONF = 'CoreManagement.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
+        'DIRS': [BASE_DIR / 'Core/templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -69,7 +79,18 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'CoreManagement.wsgi.application'
+# WSGI_APPLICATION = 'CoreManagement.wsgi.application'
+
+ASGI_APPLICATION = 'CoreManagement.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('coremanagement-redis-1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -82,6 +103,18 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': os.getenv('DATABASE_HOST'),
         'PORT': '5432',
+    }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"redis://{os.environ.get('REDIS_HOST', 'redis')}:6379/1",
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        "KEY_PREFIX": "cache",
+
     }
 }
 
@@ -128,3 +161,25 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+# Celery settings
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER', 'amqp://guest:guest@rabbitmq:5672/')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_BACKEND', f"redis://{os.environ.get('REDIS_HOST', 'redis')}:6379/1")
+
+CELERY_BEAT_SCHEDULE = {
+    "send_due_task_reminders": {
+        "task": "management.tasks.send_due_task_reminders",
+        "schedule": timedelta(hours=24),
+    },
+    "daily_project_summery": {
+        "task": "management.tasks.daily_project_summery",
+        "schedule": timedelta(hours=24),
+    },
+}
+
+# Email Configs
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'ali.darrzi.1382@gmail.com'
+EMAIL_HOST_PASSWORD = 'pmmmvkfijdjbgrni'
+EMAIL_PORT = 587

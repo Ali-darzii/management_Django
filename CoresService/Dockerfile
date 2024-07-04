@@ -8,8 +8,8 @@ ENV PATH="/PY/BIN:$PATH"
 
 RUN pip install --upgrade pip
 
-COPY ./req.txt /app/req.txt
-COPY . /app
+COPY req.txt /app/req.txt
+COPY .. /app
 
 
 # installing libpq-dev and gcc  for postgres

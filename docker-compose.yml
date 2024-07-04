@@ -1,5 +1,10 @@
-
 services:
+  redis:
+    image: redis:7.0.11-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - live
   postgres:
     image: postgres:latest
     container_name: management-postgres
@@ -11,18 +16,17 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7.0.11-alpine
+    networks:
+      - live
 
   django:
     container_name: management-django
     build:
-      context: ./
+      context: ./CoresService
       dockerfile: Dockerfile
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - .:/app
+      - ./CoresService:/app/
     ports:
       - "8000:8000"
     environment:
@@ -37,23 +41,67 @@ services:
     depends_on:
       - postgres
       - redis
-      - celery
+      - rabbitmq
+    networks:
+      - live
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:6572"
+      - "15672:15672"
+    networks:
+      - live
+
+
   celery:
     container_name: management-celery
     build:
-      context: ./
+      context: ./CoresService
       dockerfile: Dockerfile
+    command: celery --app=CoreManagement worker -l INFO -Q tasks -B --concurrency=1
     volumes:
-      - .:/app
+      - ./CoresService:/app/
     environment:
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - DEBUG=True
       - SECRET_KEY=HereIsYourSecret_Keyqweroqpowek12312313
+      - DATABASE_NAME=coreManagement
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=admin
+      - DATABASE_HOST=postgres
+      - REDIS_HOST=redis
     depends_on:
-      - postgres
+      - django
       - redis
-
+      - rabbitmq
+    networks:
+      - live
+  celery-beat:
+    build:
+      context: ./CoresService
+      dockerfile: Dockerfile
+    command: celery -A CoreManagement beat -l info
+    volumes:
+      - ./CoresService:/app/
+    environment:
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DEBUG=True
+      - SECRET_KEY=HereIsYourSecret_Keyqweroqpowek12312313
+      - DATABASE_NAME=coreManagement
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=admin
+      - DATABASE_HOST=postgres
+    depends_on:
+      - redis
+      - postgres
+      - django
+    networks:
+      - live
 
 volumes:
   postgres_data:
+networks:
+  live:
 
