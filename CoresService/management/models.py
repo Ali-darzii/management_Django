@@ -18,6 +18,7 @@ class Project(models.Model):
         verbose_name = "Project"
         verbose_name_plural = 'Projects'
         db_table = 'projectTable'
+        app_label = 'management'
 
 
 class Task(models.Model):
@@ -38,6 +39,7 @@ class Task(models.Model):
         verbose_name = "Task"
         verbose_name_plural = 'Tasks'
         db_table = 'taskTable'
+
 
 
 class Comment(models.Model):
