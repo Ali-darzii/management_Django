@@ -1,4 +1,8 @@
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 class Project(models.Model):
@@ -49,6 +53,5 @@ class Comment(models.Model):
         verbose_name = "Comment"
         verbose_name_plural = 'Comments'
         db_table = 'commentTable'
-
 
 

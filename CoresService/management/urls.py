@@ -8,4 +8,6 @@ router.register(r'projects', views.ProjectViewSet, basename='projects')
 router.register(r'tasks', views.TaskViewSet, basename='Tasks')
 router.register(r'tasks/(?P<task_id>[^/.]+)/comments', views.CommentView, basename='Comments')
 
-urlpatterns = [] + router.urls
+urlpatterns = [
+                  path("ws_test/", views.ws_test_connection, name="room"),
+              ] + router.urls

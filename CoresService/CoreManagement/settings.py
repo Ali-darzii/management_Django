@@ -27,19 +27,25 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-n+-f*)bup8z_cnebwv5w6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
+    'management',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'management',
+    # Internal
+
+    # External + daphne + channels
     'django_celery_beat',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -50,6 +56,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'CoreManagement.urls'
@@ -71,7 +79,18 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'CoreManagement.wsgi.application'
+# WSGI_APPLICATION = 'CoreManagement.wsgi.application'
+
+ASGI_APPLICATION = 'CoreManagement.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('coremanagement-redis-1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -94,7 +113,8 @@ CACHES = {
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
-        "KEY_PREFIX": "cache"
+        "KEY_PREFIX": "cache",
+
     }
 }
 
