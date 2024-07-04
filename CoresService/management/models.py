@@ -71,6 +71,7 @@ def task_post_save(sender, instance, created, **kwargs):
 # noif deleted Task to clients
 @receiver(post_delete, sender=Task)
 def task_post_delete(sender, instance, **kwargs):
+
     channel_layer = get_channel_layer()
     notification = {"type": "send_message", "message": f"{instance.title}  Task deleted"}
     async_to_sync(channel_layer.group_send)("notifications", notification)
@@ -78,6 +79,7 @@ def task_post_delete(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Comment)
 def task_commented(sender, instance, created, **kwargs):
-    channel_layer = get_channel_layer()
-    notification = {"type": "send_message", "message": f"{instance.author} commented on {instance.task.tile} task"}
-    async_to_sync(channel_layer.group_send)("notifications", notification)
+    if created:
+        channel_layer = get_channel_layer()
+        notification = {"type": "send_message", "message": f"{instance.author} commented on {instance.task.tile} task"}
+        async_to_sync(channel_layer.group_send)("notifications", notification)
