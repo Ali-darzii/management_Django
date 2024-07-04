@@ -7,6 +7,8 @@ from .models import Task, Project, Comment
 from django.db.models import Q
 from celery.signals import worker_ready
 from django.core.cache import cache as redis
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 recipient_email = 'ali.darzi.1354@gmail.com'
 
@@ -62,5 +64,7 @@ def daily_project_summery():
                     for comment in comments:
                         summery_body += f'    - {comment.author}: {comment.content}\n'
     # or we can send email
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)("notifications",
+                                            {"type": "send_message", "message": "Project Summary arrived"})
     print(summery_body)
-

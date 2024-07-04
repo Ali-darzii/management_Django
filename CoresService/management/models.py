@@ -55,7 +55,6 @@ class Comment(models.Model):
         db_table = 'commentTable'
 
 
-
 # noif create and update Task to clients
 @receiver(post_save, sender=Task)
 def task_post_save(sender, instance, created, **kwargs):
@@ -71,7 +70,6 @@ def task_post_save(sender, instance, created, **kwargs):
 # noif deleted Task to clients
 @receiver(post_delete, sender=Task)
 def task_post_delete(sender, instance, **kwargs):
-
     channel_layer = get_channel_layer()
     notification = {"type": "send_message", "message": f"{instance.title}  Task deleted"}
     async_to_sync(channel_layer.group_send)("notifications", notification)
